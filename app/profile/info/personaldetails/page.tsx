@@ -3,6 +3,11 @@ import UpdateEmailForm from "@/components/ProfileComponents/ProfileInfoComponent
 import React from "react";
 import { FaChevronRight } from "react-icons/fa";
 
+// Metadata Page Title
+export const metadata = {
+  title: "Print Plus - Personal Details",
+};
+
 const page = () => {
   return (
     <div className="flex flex-col gap-[39px] text-shadeBlack max-w-[784px]">

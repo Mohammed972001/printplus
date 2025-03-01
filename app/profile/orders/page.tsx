@@ -2,6 +2,11 @@ import OrderCard from "@/components/ProfileComponents/OrderCard";
 import { Order } from "@/types/Orders";
 import React from "react";
 
+// Metadata Page Title
+export const metadata = {
+  title: "Print Plus - Orders",
+};
+
 // Placeholder Orders Array with Multiple Products
 const orders: Order[] = [
   {

@@ -4,7 +4,12 @@ import { FaChevronRight } from "react-icons/fa";
 import { Order } from "@/types/Orders";
 import OrderStatusTimeline from "@/components/ProfileComponents/OrderStatusTimeline";
 
-// Placeholder Orders Array (same as in your main page)
+// Metadata Page Title
+export const metadata = {
+  title: "Print Plus - Order Details",
+};
+
+// Placeholder Orders Array
 const orders: Order[] = [
   {
     id: "240810ugjyxkm1",

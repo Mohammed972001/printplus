@@ -4,6 +4,11 @@ import InputField from "@/components/SharedComponents/InputField";
 import React from "react";
 import { FaChevronRight } from "react-icons/fa";
 
+// Metadata Page Title
+export const metadata = {
+  title: "Print Plus - Change Address",
+};
+
 const page = () => {
   return (
     <div className="flex flex-col gap-[39px] text-shadeBlack max-w-[784px]">

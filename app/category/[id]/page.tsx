@@ -13,6 +13,7 @@ import BannerSkeleton from "@/components/SharedComponents/BannerSkeleton";
 import SidebarSkeleton from "@/components/SharedComponents/SidebarSkeleton";
 import ProductsSkeleton from "@/components/SharedComponents/ProductsSkeleton";
 
+
 const Page = () => {
   const pathname = usePathname();
   const categoryId = pathname.split("/")[2];

@@ -13,6 +13,8 @@ import BannerSkeleton from "@/components/SharedComponents/BannerSkeleton";
 import SidebarSkeleton from "@/components/SharedComponents/SidebarSkeleton";
 import ProductsSkeleton from "@/components/SharedComponents/ProductsSkeleton";
 
+
+
 const SubCategoryPage = () => {
   const params = useParams();
   const categoryId = params.id as string;

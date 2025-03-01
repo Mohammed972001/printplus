@@ -2,6 +2,11 @@ import UpdatePasswordForm from "@/components/ProfileComponents/ProfileInfoCompon
 import React from "react";
 import { FaChevronRight } from "react-icons/fa";
 
+// Metadata Page Title
+export const metadata = {
+  title: "Print Plus - Change Password",
+};
+
 const page = () => {
   return (
     <div className="flex flex-col gap-[39px] text-shadeBlack max-w-[784px]">

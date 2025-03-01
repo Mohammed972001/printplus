@@ -3,7 +3,12 @@ import PasswordDetails from "@/components/ProfileComponents/ProfileInfoComponent
 import PersonalDetails from "@/components/ProfileComponents/ProfileInfoComponents/PersonalDetails";
 import React from "react";
 
-const page = () => {
+// Metadata Page Title
+export const metadata = {
+  title: "Print Plus - Profile",
+};
+
+const Page = () => {
   return (
     <div className="flex flex-col gap-6 text-shadeBlack">
       {/* Information header */}
@@ -12,7 +17,7 @@ const page = () => {
         {/* Personal Details */}
         <PersonalDetails />
         <hr />
-        {/*Password Details */}
+        {/* Password Details */}
         <PasswordDetails />
         <hr />
         {/* Address Details */}
@@ -23,4 +28,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

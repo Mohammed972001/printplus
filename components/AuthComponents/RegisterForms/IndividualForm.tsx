@@ -7,7 +7,7 @@ import CustomButton from "@/components/SharedComponents/CustomButton";
 import InputField from "@/components/SharedComponents/InputField";
 import { useRouter } from "next/navigation";
 
-interface IndvidualRegisterFormData {
+interface IndividualRegisterFormData {
   fullName: string;
   email: string;
   mobileNo: string;
@@ -45,7 +45,7 @@ const IndividualForm = () => {
     watch,
     formState: { errors, isValid },
     reset,
-  } = useForm<IndvidualRegisterFormData>({ defaultValues, mode: "onChange" });
+  } = useForm<IndividualRegisterFormData>({ defaultValues, mode: "onChange" });
 
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -60,37 +60,44 @@ const IndividualForm = () => {
     setMobileIso(country.countryCode.toUpperCase());
   };
 
-  const onSubmit = async (data: IndvidualRegisterFormData) => {
+  const onSubmit = async (data: IndividualRegisterFormData) => {
+    // Validate mobile code
     if (!mobileCode) {
-      toast.error("مفتاح الدولة حقل مطلوب");
+      toast.error("Country code is required");
       return;
     }
     if (!/^\+\d+$/.test(mobileCode)) {
-      toast.error("مفتاح الدولة غير صالح");
+      toast.error("Invalid country code");
       return;
     }
+
+    // Validate mobile number
     if (!mobileNo) {
-      toast.error("رقم الجوال حقل مطلوب");
+      toast.error("Mobile number is required");
       return;
     }
     if (!/^\d{6,15}$/.test(mobileNo)) {
-      toast.error("تنسيق رقم الجوال غير صالح");
+      toast.error("Invalid mobile number format");
       return;
     }
+
+    // Validate mobile ISO code
     if (!mobileIso) {
-      toast.error("الرمز الدولي حقل مطلوب");
+      toast.error("Country ISO code is required");
       return;
     }
     if (!/^[A-Za-z]{2}$/.test(mobileIso)) {
-      toast.error("يجب أن يكون الرمز الدولي مكون من حرفين فقط");
+      toast.error("Country ISO code must be exactly 2 letters");
       return;
     }
+
+    // Validate city and account type
     if (!data.cityId) {
-      toast.error("المدينة حقل مطلوب");
+      toast.error("City is required");
       return;
     }
     if (data.accountType !== 1) {
-      toast.error("نوع الحساب يجب أن يكون شخصي");
+      toast.error("Account type must be individual");
       return;
     }
 
@@ -103,17 +110,19 @@ const IndividualForm = () => {
         mobileIso,
       };
 
+      // Submit registration data to the API
       const response = await axios.post(`${API_BASE_URL}/auth/register`, requestData);
-      toast.success("تم التسجيل بنجاح تفقد بريدك الالكتروني!");
+      toast.success("Registration successful! Please check your email.");
       reset();
       router.push("login");
     } catch (error: any) {
+      // Handle API errors
       if (error.response) {
-        toast.error(error.response.data?.message || "حدث خطأ، حاول مرة أخرى");
+        toast.error(error.response.data?.message || "An error occurred, please try again.");
       } else if (error.request) {
-        toast.error("لم يتم استلام استجابة من السيرفر، تحقق من اتصالك بالإنترنت.");
+        toast.error("No response received from the server. Please check your internet connection.");
       } else {
-        toast.error("حدث خطأ غير متوقع، حاول مرة أخرى.");
+        toast.error("An unexpected error occurred. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -123,20 +132,21 @@ const IndividualForm = () => {
   return (
     <form className="flex flex-col gap-6 w-full md:w-[485px]" onSubmit={handleSubmit(onSubmit)}>
       <div className="flex flex-col gap-6 w-full">
+        {/* Full Name Input */}
         <InputField
           id="fullName"
           label="Full name*"
           {...register("fullName", {
-            required: "الاسم الكامل حقل مطلوب.",
+            required: "Full name is required.",
             validate: (value) => {
               const words = value.trim().split(/\s+/);
               if (!(words.length === 2 || words.length === 3)) {
-                return 'يجب أن يكون الاسم الكامل بالتنسيق "الاسم الأول الأخير" أو "الاسم الأول الأوسط الأخير" ويجب أن يحتوي على أحرف صالحة.';
+                return 'Full name must be in the format "First Last" or "First Middle Last" and contain valid characters.';
               }
               for (let word of words) {
-                if (word.length < 2) return "يجب أن تتكون كل كلمة في الاسم الكامل من حرفين على الأقل";
+                if (word.length < 2) return "Each word in the full name must be at least 2 characters long.";
                 if (!/^[A-Za-z\u0600-\u06FF]+$/.test(word)) {
-                  return 'يجب أن يكون الاسم الكامل بالتنسيق "الاسم الأول الأخير" أو "الاسم الأول الأوسط الأخير" ويجب أن يحتوي على أحرف صالحة.';
+                  return 'Full name must be in the format "First Last" or "First Middle Last" and contain valid characters.';
                 }
               }
               return true;
@@ -144,18 +154,22 @@ const IndividualForm = () => {
           })}
           error={errors.fullName?.message}
         />
+
+        {/* Email Input */}
         <InputField
           id="email"
           label="Email*"
           {...register("email", {
-            required: "البريد الإلكتروني حقل مطلوب",
+            required: "Email is required",
             pattern: {
               value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-              message: "البريد الإلكتروني غير صحيح",
+              message: "Invalid email format",
             },
           })}
           error={errors.email?.message}
         />
+
+        {/* Mobile Number Input */}
         <InputField
           id="mobileNo"
           isPhoneInput={true}
@@ -163,42 +177,48 @@ const IndividualForm = () => {
           value={mobileNo}
           onPhoneChange={handlePhoneChange}
         />
+
+        {/* Password Input */}
         <InputField
           id="password"
           label="Password*"
           type="password"
           {...register("password", {
-            required: "كلمة المرور حقل مطلوب",
-            minLength: { value: 8, message: "كلمة المرور يجب أن تكون على الأقل 8" },
-            maxLength: { value: 64, message: "كلمة المرور يجب ألا تتجاوز 64" },
+            required: "Password is required",
+            minLength: { value: 8, message: "Password must be at least 8 characters long" },
+            maxLength: { value: 64, message: "Password must not exceed 64 characters" },
             validate: {
               hasUppercase: (value) =>
-                /[A-Z]/.test(value) || "كلمة المرور يجب أن تحتوي على الأقل حرف كبير واحد",
+                /[A-Z]/.test(value) || "Password must contain at least one uppercase letter",
               hasLowercase: (value) =>
-                /[a-z]/.test(value) || "كلمة المرور يجب أن تحتوي على ألاقل حرف صغير واحد",
+                /[a-z]/.test(value) || "Password must contain at least one lowercase letter",
               hasDigit: (value) =>
-                /\d/.test(value) || "كلمة المرور يجب أن تحتوى على الأقل حرقم واحد",
+                /\d/.test(value) || "Password must contain at least one digit",
               hasSpecial: (value) =>
-                /[!@#$%^&*(),.?":{}|<>]/.test(value) || "كلمة المرور يجب أن تحتوي على الأقل رمز خاص واحد",
+                /[!@#$%^&*(),.?":{}|<>]/.test(value) || "Password must contain at least one special character",
               noWhitespace: (value) =>
-                !/\s/.test(value) || "كلمة المرور يجب ألا تحتوي على فراغات",
+                !/\s/.test(value) || "Password must not contain spaces",
               notCommon: (value) =>
-                !isCommonPassword(value) || "تعتبر شائعة وسهلة التخمين",
+                !isCommonPassword(value) || "Password is too common and easy to guess",
             },
           })}
           error={errors.password?.message}
         />
+
+        {/* Confirm Password Input */}
         <InputField
           id="confirmpassword"
           label="Confirm Password*"
           type="password"
           {...register("confirmPassword", {
-            required: "هذا الحقل مطلوب",
-            validate: (value) => value === watch("password") || "كلمة المرور غير متطابقة",
+            required: "This field is required",
+            validate: (value) => value === watch("password") || "Passwords do not match",
           })}
           error={errors.confirmPassword?.message}
         />
       </div>
+
+      {/* Submit Button */}
       <CustomButton
         label={loading ? "Signing up..." : "Sign up"}
         type="submit"
