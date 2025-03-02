@@ -1,9 +1,10 @@
 "use client";
 import CustomButton from "@/components/SharedComponents/CustomButton";
 import InputField from "@/components/SharedComponents/InputField";
+import IntlTelInputField, { IntlTelInputFieldRef } from "@/components/SharedComponents/IntlTelInputField";
 import axios from "axios";
 import { useSession } from "next-auth/react";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
@@ -17,7 +18,7 @@ interface UpdatePersonalDetails {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const PersonalDetailsForm = () => {
-  const { data: session, status } = useSession(); // Get the session and its status
+  const { data: session } = useSession();
   const {
     register,
     handleSubmit,
@@ -26,24 +27,21 @@ const PersonalDetailsForm = () => {
     formState: { errors, isValid },
     reset,
   } = useForm<UpdatePersonalDetails>({
-    mode: "onChange", // Validate form on change
+    mode: "onChange",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Watch mobileNo, mobileCode, and mobileIso to include them in form validation
   const mobileNo = watch("mobileNo");
-  const mobileCode = watch("mobileCode");
-  const mobileIso = watch("mobileIso");
 
-  // Function to handle phone input change
+  const phoneInputRef = useRef<IntlTelInputFieldRef>(null);
+
   const handlePhoneChange = (phone: string, country: any) => {
     setValue("mobileNo", phone, { shouldValidate: true });
-    setValue("mobileCode", `+${country.dialCode}`, { shouldValidate: true });
-    setValue("mobileIso", country.countryCode.toUpperCase(), {
-      shouldValidate: true,
-    });
+    setValue("mobileCode", country?.dialCode ? `+${country.dialCode}` : "", { shouldValidate: true });
+    const iso = country && country.iso2 ? country.iso2.toUpperCase() : "";
+    setValue("mobileIso", iso, { shouldValidate: true });
   };
+  
 
   const onSubmit = async (data: UpdatePersonalDetails) => {
     try {
@@ -53,16 +51,15 @@ const PersonalDetailsForm = () => {
         throw new Error("User token is missing. Please log in again.");
       }
 
-      // Validate phone input
-      if (!mobileNo || !mobileCode || !mobileIso) {
-        throw new Error("يرجى إدخال رقم الهاتف بشكل صحيح.");
+      if (phoneInputRef.current && !phoneInputRef.current.isValidNumber()) {
+        throw new Error("تنسيق رقم الجوال غير صالح");
       }
 
       const requestData = {
         ...data,
-        mobileNo,
-        mobileCode,
-        mobileIso,
+        mobileNo: data.mobileNo,
+        mobileCode: data.mobileCode,
+        mobileIso: data.mobileIso,
       };
 
       const response = await axios.post(
@@ -76,23 +73,16 @@ const PersonalDetailsForm = () => {
         }
       );
 
-      console.log("Success:", response.data);
       toast.success("تم تحديث البيانات بنجاح!");
-
-      // Reset form and state
       reset();
       setValue("mobileNo", "");
       setValue("mobileCode", "");
       setValue("mobileIso", "");
     } catch (error: any) {
-      console.error("Error:", error);
-
       if (error.response) {
         toast.error(error.response.data?.message || "حدث خطأ، حاول مرة أخرى");
       } else if (error.request) {
-        toast.error(
-          "لم يتم استلام استجابة من السيرفر، تحقق من اتصالك بالإنترنت."
-        );
+        toast.error("لم يتم استلام استجابة من السيرفر، تحقق من اتصالك بالإنترنت.");
       } else {
         toast.error(error.message || "حدث خطأ غير متوقع، حاول مرة أخرى.");
       }
@@ -101,21 +91,34 @@ const PersonalDetailsForm = () => {
     }
   };
 
-  const isFormValid = isValid && mobileNo && mobileCode && mobileIso;
+  const isFormValid = isValid && mobileNo;
 
   return (
     <form className="flex flex-col gap-6" onSubmit={handleSubmit(onSubmit)}>
-      <p className="text-lg font-semibold">Personal details</p>
+      <p className="text-lg font-semibold">التفاصيل الشخصية</p>
       <InputField
         id="fullName"
-        label="Full name"
-        {...register("fullName", { required: "هذا الحقل مطلوب" })}
+        label="الاسم الكامل"
+        {...register("fullName", {
+          required: "الاسم الكامل حقل مطلوب",
+          pattern: {
+            value: /^(([A-Za-z\u0621-\u064A]{2,})\s+([A-Za-z\u0621-\u064A]{2,})(\s+([A-Za-z\u0621-\u064A]{2,}))?)$/,
+            message:
+              "يجب أن يكون الاسم الكامل بالتنسيق 'الاسم الأول الأخير' أو 'الاسم الأول الأوسط الأخير' ويجب أن يحتوي على أحرف صالحة..",
+          },
+          validate: (value) => {
+            const words = value.trim().split(/\s+/);
+            if (words.some((word) => word.length < 2)) {
+              return "يجب أن تتكون كل كلمة في الاسم الكامل من حرفين على الأقل";
+            }
+            return true;
+          },
+        })}
         error={errors.fullName?.message}
       />
-      <InputField
-        id="mobileNo"
-        isPhoneInput={true}
-        label="Mobile Number"
+      <IntlTelInputField
+        ref={phoneInputRef}
+        label="رقم الجوال"
         value={mobileNo}
         onPhoneChange={handlePhoneChange}
         error={errors.mobileNo?.message}

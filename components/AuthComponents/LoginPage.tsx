@@ -60,22 +60,28 @@ const LoginPage = () => {
         {/* Title and subtitle */}
         <h2 className="text-3xl text-shadeBlack font-bold">Sign in</h2>
         {/* Email Section */}
-        <InputField
-          id="email"
-          label="Email*"
-          type="email"
-          {...register("email", {
-            required: "Email is required",
-            pattern: {
-              value: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
-              message: "Invalid email format",
-            },
-          })}
-        />
-        {errors.email && <p className="text-red-500">{errors.email.message}</p>}
+        <div className="w-full ">
+          {/* Error Message */}
+          {error && <p className="text-red-500 pb-2">{error}</p>}
+          <InputField
+            id="email"
+            label="Email*"
+            type="email"
+            {...register("email", {
+              required: "Email is required",
+              pattern: {
+                value: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
+                message: "Invalid email format",
+              },
+            })}
+            error={errors.email?.message}
+          />
 
+
+        </div>
         {/* Password and forgot password Section */}
         <div className="w-full flex flex-col gap-2">
+
           <InputField
             id="password"
             label="Password*"
@@ -91,17 +97,15 @@ const LoginPage = () => {
                 message: "Password must be at most 64 characters.",
               },
             })}
+            error={errors.password?.message}
           />
-
           <Link
             href={"/forgetpassword"}
             className="text-xs text-shadeBlack self-end"
           >
             Forgot password?
           </Link>
-          {errors.password && (
-            <p className="text-red-500">{errors.password.message}</p>
-          )}
+
         </div>
 
         {/* Submit Button*/}
@@ -110,8 +114,7 @@ const LoginPage = () => {
           label={isSubmitting ? "Loging in..." : "Log in "}
           disabled={isSubmitting}
         />
-        {/* Error Message */}
-        {error && <p className="text-red-500">{error}</p>}
+
 
         {/* Register Redirect Section */}
         <div className="w-full flex justify-center items-center gap-2 mt-2">

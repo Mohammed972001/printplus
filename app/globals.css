@@ -49,3 +49,26 @@
 .react-tel-input .form-control {
   padding-left: 80px !important;
 }
+@layer components {
+  .error-message {
+    @apply text-[#BE123C] font-inter text-xs leading-4 font-normal tracking-normal pt-[2px];
+  }
+}
+
+/* لو بتستخدم النسخة العادية */
+.iti__flag {
+  background-image: url("/img/flags.png") !important;
+}
+
+/* لو عايز تدعم الـ2x لأجهزة الريتنا */
+@media only screen and (-webkit-min-device-pixel-ratio: 2),
+  only screen and (min--moz-device-pixel-ratio: 2),
+  only screen and (-o-min-device-pixel-ratio: 2/1),
+  only screen and (min-device-pixel-ratio: 2),
+  only screen and (min-resolution: 192dpi),
+  only screen and (min-resolution: 2dppx) {
+  .iti__flag {
+    background-image: url("/img/flags@2x.png") !important;
+    background-size: 5630px 2040px; /* المقاسات بتختلف حسب النسخة */
+  }
+}

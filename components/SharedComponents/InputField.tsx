@@ -38,12 +38,15 @@ const InputField: React.FC<InputFieldProps> = ({
       </label>
       <div className="relative w-full">
         {isPhoneInput ? (
-          <div className="flex flex-row-reverse border border-borderColor rounded-lg h-[48px] md:h-auto">
+          <div className={`flex flex-row-reverse border
+           ${error ? 'border-[#FB7185]' : 'border-borderColor'}
+            rounded-lg h-[48px] md:h-auto`}>
             <PhoneInput
               country={"sa"} // Default country (Saudi Arabia)
               enableSearch={true}
               enableAreaCodes={false}
               value={phoneNumber}
+              
               onChange={(phone, country) => {
                 setPhoneNumber(phone);
                 onPhoneChange && onPhoneChange(phone, country);
@@ -59,7 +62,9 @@ const InputField: React.FC<InputFieldProps> = ({
                 left: 0,
                 zIndex: 9999,
               }}
+              
             />
+            {error && <p className="error-message">{error}</p>}
           </div>
         ) : (
           <>
@@ -70,7 +75,7 @@ const InputField: React.FC<InputFieldProps> = ({
               value={value}
               {...register}
               {...rest}
-              className="border border-borderColor h-[48px] md:h-[36px] rounded-lg focus:outline-none placeholder:text-[#525252] w-full py-2 ps-2"
+              className={`border ${error ? 'border-[#FB7185]' : 'border-borderColor'} h-[48px] md:h-[36px] rounded-lg focus:outline-none placeholder:text-[#525252] w-full py-2 ps-2`}
             />
             {type === "password" && (
               <button
@@ -85,7 +90,7 @@ const InputField: React.FC<InputFieldProps> = ({
                 )}
               </button>
             )}
-            {error && <p className="text-red-500">{error}</p>}
+            {error && <p className="error-message">{error}</p>}
           </>
         )}
       </div>
