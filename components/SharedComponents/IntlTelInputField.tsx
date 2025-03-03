@@ -1,124 +1,130 @@
 "use client";
-import React, {
-  useEffect,
-  useRef,
-  useImperativeHandle,
-  forwardRef
-} from "react";
-import intlTelInput from "intl-tel-input";
-import "intl-tel-input/build/css/intlTelInput.css";
+import React, { useState, forwardRef, useImperativeHandle } from "react";
+import IntlTelInput from "intl-tel-input/reactWithUtils";
+import "intl-tel-input/styles";
 
-interface IntlTelInputFieldProps {
+export interface PhoneData {
+  phoneNumber: string;
+  mobileCode: string;
+  mobileIso: string;
+  isValid: boolean;
+  errorMessage: string;
+}
+
+export interface PhoneInputWithValidationRef {
+  getPhoneData: () => PhoneData;
+}
+
+interface PhoneInputWithValidationProps {
   label?: string;
-  value?: string;
-  onPhoneChange?: (phone: string, countryData: any) => void;
-  error?: string;
+  initialValue?: string;
+  initOptions?: any;
 }
 
-export interface IntlTelInputFieldRef {
-  isValidNumber: () => boolean;
-  getNumber: () => string;
-}
+const libraryErrorMap = [
+  "رقم غير صالح",         // code 0
+  "رمز الدولة غير صالح",  // code 1
+  "رقم قصير جدًا",        // code 2
+  "رقم طويل جدًا",        // code 3
+  "رقم غير صالح",         // code 4
+];
 
-const IntlTelInputField = forwardRef<IntlTelInputFieldRef, IntlTelInputFieldProps>(
-  ({ label, value = "", onPhoneChange, error }, ref) => {
-    const inputRef = useRef<HTMLInputElement>(null);
-    const itiRef = useRef<any>(null);
+const validateMobileCode = (code: string): string | null => {
+  if (!code) return "مفتاح الدولة حقل مطلوب";
+  if (!/^\+\d+$/.test(code)) return "مفتاح الدولة غير صالح";
+  return null;
+};
 
-    useImperativeHandle(ref, () => ({
-      isValidNumber: () => (itiRef.current ? itiRef.current.isValidNumber() : false),
-      getNumber: () => (itiRef.current ? itiRef.current.getNumber() : ""),
+const validateMobileIso = (iso: string): string | null => {
+  if (!iso) return "الرمز الدولي حقل مطلوب";
+  if (iso.length !== 2) return "يجب أن يكون الرمز الدولي مكون من حرفين فقط";
+  if (!/^[A-Za-z]{2}$/.test(iso))
+    return "الرمز الدولي يجب أن يحتوى على أحرف إنجليزية فقط";
+  return null;
+};
+
+const PhoneInputWithValidation = forwardRef<
+  PhoneInputWithValidationRef,
+  PhoneInputWithValidationProps
+>(({ label, initialValue = "", initOptions }, ref) => {
+  const [phoneData, setPhoneData] = useState<PhoneData>({
+    phoneNumber: initialValue,
+    mobileCode: "",
+    mobileIso: "",
+    isValid: false,
+    errorMessage: "",
+  });
+
+  const onNumberChange = (num: string) => {
+    setPhoneData((prev) => ({ ...prev, phoneNumber: num }));
+  };
+
+  const onValidityChange = (valid: boolean) => {
+    setPhoneData((prev) => ({ ...prev, isValid: valid }));
+  };
+
+  const onErrorCodeChange = (code: number | null) => {
+    let errMsg = "";
+    if (code !== null && code !== undefined) {
+      errMsg = libraryErrorMap[code] || "تنسيق رقم الجوال غير صالح";
+    }
+    setPhoneData((prev) => ({ ...prev, errorMessage: errMsg }));
+  };
+
+  const onCountryChange = (countryData: any) => {
+    const mobileCode = `+${countryData.dialCode}`;
+    const mobileIso = countryData.iso2 ? countryData.iso2.toUpperCase() : "";
+    const codeErr = validateMobileCode(mobileCode);
+    const isoErr = validateMobileIso(mobileIso);
+    let errMsg = phoneData.errorMessage;
+    if (codeErr) errMsg = codeErr;
+    else if (isoErr) errMsg = isoErr;
+    setPhoneData((prev) => ({
+      ...prev,
+      mobileCode,
+      mobileIso,
+      isValid: prev.isValid && !codeErr && !isoErr,
+      errorMessage: errMsg,
     }));
+  };
 
-    useEffect(() => {
-      if (inputRef.current && !itiRef.current) {
-        itiRef.current = intlTelInput(inputRef.current, {
-          initialCountry: "sa",
-          allowDropdown: true,
-          preferredCountries: ["sa", "eg", "us"],
-          utilsScript:
-            "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
-          nationalMode: false,
-          autoHideDialCode: false,
-          separateDialCode: false,
-          formatOnDisplay: true,
-        } as any); 
+  useImperativeHandle(ref, () => ({
+    getPhoneData: () => phoneData,
+  }));
 
-        if (value) {
-          itiRef.current.setNumber(value);
-        } else {
-          const countryData = itiRef.current.getSelectedCountryData();
-          itiRef.current.setNumber(`+${countryData.dialCode}`);
-        }
-
-        const handleInputChange = () => {
-          if (itiRef.current) {
-            const number = itiRef.current.getNumber();
-            const countryData = itiRef.current.getSelectedCountryData();
-            onPhoneChange && onPhoneChange(number, countryData);
-          }
-        };
-
-        const handleCountryChange = () => {
-          if (itiRef.current && inputRef.current) {
-            const countryData = itiRef.current.getSelectedCountryData();
-            if (!inputRef.current.value) {
-              itiRef.current.setNumber(`+${countryData.dialCode}`);
-            }
-            const number = itiRef.current.getNumber();
-            onPhoneChange && onPhoneChange(number, countryData);
-          }
-        };
-
-        inputRef.current.addEventListener("input", handleInputChange);
-        inputRef.current.addEventListener("countrychange", handleCountryChange);
-
-        return () => {
-          if (inputRef.current) {
-            inputRef.current.removeEventListener("input", handleInputChange);
-            inputRef.current.removeEventListener("countrychange", handleCountryChange);
-          }
-          if (itiRef.current) {
-            itiRef.current.destroy();
-            itiRef.current = null;
-          }
-        };
-      }
-    }, []); 
-
-    useEffect(() => {
-      if (itiRef.current && value) {
-        itiRef.current.setNumber(value);
-      }
-    }, [value]);
-
-    return (
-      <div className="flex flex-col justify-start items-start w-full gap-1">
-        {label && (
-          <label htmlFor="phone-input" className="font-bold text-shadeGray text-sm">
-            {label}
-          </label>
-        )}
-        <div className="relative w-full">
-          <div
-            className={`flex flex-row-reverse border ${
-              error ? "border-[#FB7185]" : "border-borderColor"
-            } rounded-lg h-[40px]`}
-          >
-            <div className="w-full flex">
-              <input
-                id="phone-input"
-                ref={inputRef}
-                type="tel"
-                className="border-none h-[40px] text-left self-center ml-2 w-full focus:outline-none placeholder:text-[#525252] bg-transparent"
-              />
-            </div>
-          </div>
-          {error && <p className="error-message">{error}</p>}
+  return (
+    <div className="flex flex-col justify-start items-start w-full gap-1">
+      {label && (
+        <label htmlFor="phone-input" className="font-bold text-shadeGray text-sm">
+          {label}
+        </label>
+      )}
+      <div className="relative w-full">
+        <div
+          className={`flex flex-row border ${
+            phoneData.errorMessage ? "border-[#FB7185]" : "border-borderColor"
+          } rounded-lg h-[40px]`}
+        >
+          <IntlTelInput
+            initialValue={initialValue}
+            onChangeNumber={onNumberChange}
+            onChangeValidity={onValidityChange}
+            onChangeErrorCode={onErrorCodeChange}
+            onChangeCountry={onCountryChange}
+            initOptions={initOptions as any}
+            inputProps={{
+              id: "phone-input",
+              className:
+                "border-none h-[40px] text-left self-center ml-2 w-full focus:outline-none placeholder:text-[#525252] bg-transparent",
+            }}
+          />
         </div>
+        {phoneData.errorMessage && (
+          <p className="error-message text-red-500 text-sm">{phoneData.errorMessage}</p>
+        )}
       </div>
-    );
-  }
-);
+    </div>
+  );
+});
 
-export default IntlTelInputField;
+export default PhoneInputWithValidation;
